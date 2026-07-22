@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shooter</title>
+    <meta name="description" content="A-Frame Shooter Game">
+    <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
+    <script src="movement.js"></script>
+    <script src="player.js"></script>
+    <script src="gun.js"></script>
+    <script src="enemy.js"></script>
+    <script src="game.js"></script>
+    <script src="plasma-shader.js"></script>
+    
+  </head>
+  <body>
+    
+    <a-scene>
+
+      <a-assets>
+        <canvas id="plasma-canvas-tex" width="256" height="256" style="display:none"></canvas>
+      </a-assets>
+
+
+      
+
+      <!-- Floor -->
+      <a-plane 
+        position="0 0 -10" 
+        rotation="-90 0 0" 
+        width="100" 
+        height="100" 
+        color="#222" 
+        material="opacity: 0.9; roughness: 1"
+      ></a-plane>
+
+      
+
+      <!-- Camera rig with controllers as children -->
+      <a-entity id="camera-rig" player-jump player-health>
+        <a-camera id="camera" position="0 1.6 0" look-controls="pointerLockEnabled: true">
+          <a-cursor id="desktop-cursor" rayOrigin="mouse" raycaster="objects: .interactive" visible="false" desktop-cursor-only></a-cursor>
+          <!-- Gun attached to camera -->
+          <a-entity id="gun" position="0.3 -0.3 -0.5" gun-component></a-entity>
+        </a-camera>
+
+        <!-- Left controller -->
+        <a-entity
+          id="left-controller"
+          laser-controls="hand: left"
+          raycaster="objects: .interactive; far: 10"
+          line="color: #00ff00; opacity: 0.8; lineWidth: 2;"
+           cursor="rayOrigin: entity"
+          thumbstick-audio
+          smooth-locomotion
+        ></a-entity>
+
+        <!-- Right controller -->
+        <a-entity
+          id="right-controller"
+          laser-controls="hand: right"
+          raycaster="objects: .interactive; far: 10"
+          line="color: #00ff00; opacity: 0.8; lineWidth: 2;"
+          cursor="rayOrigin: entity"
+          vr-smooth-turn
+          thumbstick-audio
+        ></a-entity>
+      </a-entity>
+
+      <!-- LIGHTS -->
+    <a-light type="ambient" intensity="0.4"></a-light>
+    <a-light type="point" position="0 4 2" intensity="1"></a-light>
+
+    <!-- Enemy spawner -->
+    <a-entity id="enemy-spawner" enemy-spawner></a-entity>
+
+    <!-- Global plasma canvas animator -->
+    <a-entity plasma-anim="colorScheme: hot; animatePosition: false" visible="false"></a-entity>
+
+    <!-- UI for health and score -->
+    <a-entity id="ui-container" position="0 0 -2">
+      <a-text id="health-text" value="Health: 100" position="-0.5 0.5 0" color="#00ff00" width="2"></a-text>
+      <a-text id="score-text" value="Score: 0" position="0.5 0.5 0" color="#ffff00" width="2"></a-text>
+    </a-entity>
+
+    </a-scene>
+  </body>
+</html>
