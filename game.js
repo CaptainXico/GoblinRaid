@@ -2,13 +2,16 @@
 
 AFRAME.registerComponent('game-manager', {
   schema: {
-    isGameOver: { type: 'boolean', default: false }
+    isGameOver: { type: 'boolean', default: false },
+    gameStarted: { type: 'boolean', default: false }
   },
 
   init() {
     this.healthText = document.getElementById('health-text');
     this.scoreText = document.getElementById('score-text');
     this.gameOverText = null;
+    this.titleScreen = document.getElementById('title-screen');
+    this.startButton = document.getElementById('start-button');
     
     // Listen for game over event
     this.el.sceneEl.addEventListener('game-over', () => {
@@ -21,6 +24,27 @@ AFRAME.registerComponent('game-manager', {
         this.restartGame();
       }
     });
+    
+    // Listen for start button click
+    if (this.startButton) {
+      this.startButton.addEventListener('click', () => {
+        this.startGame();
+      });
+    }
+  },
+
+  startGame() {
+    this.data.gameStarted = true;
+    
+    // Hide title screen
+    if (this.titleScreen) {
+      this.titleScreen.classList.add('hidden');
+    }
+    
+    // Emit game started event to notify spawner
+    this.el.sceneEl.emit('game-started');
+    
+    console.log('Game Started!');
   },
 
   handleGameOver() {
@@ -28,12 +52,6 @@ AFRAME.registerComponent('game-manager', {
     
     // Create game over UI
     this.showGameOverScreen();
-    
-    // Stop enemy spawning
-    const spawner = document.getElementById('enemy-spawner');
-    if (spawner) {
-      spawner.setAttribute('enemy-spawner', 'spawnRate', 999999);
-    }
     
     // Remove all enemies
     const enemies = document.querySelectorAll('.enemy');
@@ -51,7 +69,7 @@ AFRAME.registerComponent('game-manager', {
     
     this.gameOverText = document.createElement('a-text');
     this.gameOverText.setAttribute('value', 'GAME OVER\nPress R to Restart');
-    this.gameOverText.setAttribute('position', '0 0 -3');
+    this.gameOverText.setAttribute('position', '0.2 1 -2');
     this.gameOverText.setAttribute('color', '#ff0000');
     this.gameOverText.setAttribute('width', '4');
     this.gameOverText.setAttribute('align', 'center');
@@ -62,6 +80,7 @@ AFRAME.registerComponent('game-manager', {
   restartGame() {
     // Reset game state
     this.data.isGameOver = false;
+    this.data.gameStarted = false;
     
     // Remove game over text
     if (this.gameOverText && this.gameOverText.parentNode) {
@@ -69,21 +88,28 @@ AFRAME.registerComponent('game-manager', {
       this.gameOverText = null;
     }
     
-    // Reset player health
-    const cameraRig = document.getElementById('camera-rig');
-    if (cameraRig) {
-      cameraRig.setAttribute('player-health', 'currentHealth', 100);
+    // Show title screen again
+    if (this.titleScreen) {
+      this.titleScreen.classList.remove('hidden');
     }
+    
+    // Release pointer lock so cursor is visible
+    document.exitPointerLock();
     
     // Reset score
     const spawner = document.getElementById('enemy-spawner');
     if (spawner) {
-      // Reset spawner
-      spawner.setAttribute('enemy-spawner', 'spawnRate', 3000);
       spawner.components['enemy-spawner'].score = 0;
       if (this.scoreText) {
         this.scoreText.setAttribute('value', 'Score: 0');
       }
+    }
+    
+    // Reset player health
+    const cameraRig = document.getElementById('camera-rig');
+    if (cameraRig) {
+      cameraRig.setAttribute('player-health', 'currentHealth', 100);
+      cameraRig.components['player-health'].updateHealthUI();
     }
     
     // Reset player position

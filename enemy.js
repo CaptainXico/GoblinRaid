@@ -16,23 +16,54 @@ AFRAME.registerComponent('enemy-spawner', {
     this.cameraRig = document.getElementById('camera-rig');
     this.scoreText = document.getElementById('score-text');
     this.score = 0;
+    this.gameStarted = false;
+    this.spawnInterval = null;
     
-    // Start spawning loop
-    this.spawnLoop();
+    // Listen for game start event
+    this.el.sceneEl.addEventListener('game-started', () => {
+      this.gameStarted = true;
+      this.startSpawning();
+    });
+    
+    // Listen for game over event
+    this.el.sceneEl.addEventListener('game-over', () => {
+      this.gameStarted = false;
+      this.stopSpawning();
+      this.clearEnemies();
+    });
   },
 
-  spawnLoop() {
-    setInterval(() => {
+  clearEnemies() {
+    // Remove all existing enemies
+    this.enemies.forEach(enemy => {
+      if (enemy.parentNode) {
+        enemy.parentNode.removeChild(enemy);
+      }
+    });
+    this.enemies = [];
+  },
+
+  startSpawning() {
+    if (this.spawnInterval) return;
+    this.spawnInterval = setInterval(() => {
       this.spawnEnemy();
     }, this.data.spawnRate);
   },
 
+  stopSpawning() {
+    if (this.spawnInterval) {
+      clearInterval(this.spawnInterval);
+      this.spawnInterval = null;
+    }
+  },
+
   spawnEnemy() {
+    if (!this.gameStarted) return;
     if (this.enemies.length >= this.data.maxEnemies) return;
     
-    const enemy = document.createElement('a-sphere');
-    enemy.setAttribute('radius', '0.5');
-    enemy.setAttribute('color', '#ff0000');
+    const enemy = document.createElement('a-entity');
+    enemy.setAttribute('gltf-model', '#monster');
+    enemy.setAttribute('scale', '1 1 1');
     enemy.setAttribute('class', 'enemy');
     enemy.setAttribute('enemy-ai', `speed: ${this.data.enemySpeed}; damage: ${this.data.enemyDamage}`);
     enemy.setAttribute('enemy-health', `maxHealth: ${this.data.enemyHealth}`);
@@ -51,7 +82,7 @@ AFRAME.registerComponent('enemy-spawner', {
   },
 
   getRandomSpawnPosition() {
-    if (!this.cameraRig) return { x: 10, y: 1, z: -10 };
+    if (!this.cameraRig) return { x: 10, y: 0.5, z: -10 };
     
     const playerPos = this.cameraRig.getAttribute('position');
     const angle = Math.random() * Math.PI * 2;
@@ -59,7 +90,7 @@ AFRAME.registerComponent('enemy-spawner', {
     
     return {
       x: playerPos.x + Math.cos(angle) * distance,
-      y: 1, // Ground level
+      y: 0.5, // Ground level
       z: playerPos.z + Math.sin(angle) * distance
     };
   },
@@ -92,6 +123,7 @@ AFRAME.registerComponent('enemy-ai', {
 
   init() {
     this.cameraRig = document.getElementById('camera-rig');
+    this.treasurePosition = { x: 0.16, y: 0, z: -2 }; // Treasure chest position
     this.lastAttack = 0;
     
     // Listen for hit events
@@ -101,43 +133,40 @@ AFRAME.registerComponent('enemy-ai', {
   },
 
   tick(time, delta) {
-    if (!this.cameraRig) return;
-    
     const dt = delta / 1000;
     const enemyPos = this.el.getAttribute('position');
-    const playerPos = this.cameraRig.getAttribute('position');
     
-    // Calculate direction to player
+    // Calculate direction to treasure
     const direction = new THREE.Vector3(
-      playerPos.x - enemyPos.x,
+      this.treasurePosition.x - enemyPos.x,
       0, // Keep on ground
-      playerPos.z - enemyPos.z
+      this.treasurePosition.z - enemyPos.z
     );
     
     const distance = direction.length();
     direction.normalize();
     
-    // Move toward player
+    // Move toward treasure
     if (distance > 1.5) {
       enemyPos.x += direction.x * this.data.speed * dt;
       enemyPos.z += direction.z * this.data.speed * dt;
       this.el.setAttribute('position', enemyPos);
     } else {
-      // Attack player if close enough
-      this.attackPlayer();
+      // Attack treasure if close enough
+      this.attackTreasure();
     }
     
-    // Make enemy face player
+    // Make enemy face treasure
     const angle = Math.atan2(direction.x, direction.z);
     this.el.setAttribute('rotation', { x: 0, y: THREE.MathUtils.radToDeg(angle), z: 0 });
   },
 
-  attackPlayer() {
+  attackTreasure() {
     const now = Date.now();
     if (now - this.lastAttack < this.data.attackCooldown) return;
     this.lastAttack = now;
     
-    // Damage player
+    // Damage player (treasure defense)
     if (this.cameraRig) {
       this.cameraRig.emit('player-damaged', { damage: this.data.damage });
     }
@@ -161,10 +190,11 @@ AFRAME.registerComponent('enemy-health', {
   takeDamage(amount) {
     this.data.currentHealth -= amount;
     
-    // Flash white when hit
-    this.el.setAttribute('color', '#ffffff');
+    // Flash effect when hit - scale up briefly
+    const originalScale = this.el.getAttribute('scale') || { x: 1, y: 1, z: 1 };
+    this.el.setAttribute('scale', { x: 1.2, y: 1.2, z: 1.2 });
     setTimeout(() => {
-      this.el.setAttribute('color', '#ff0000');
+      this.el.setAttribute('scale', originalScale);
     }, 100);
     
     if (this.data.currentHealth <= 0) {
