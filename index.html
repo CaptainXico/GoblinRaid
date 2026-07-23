@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shooter</title>
+    <title>Goblin Raid</title>
     <meta name="description" content="A-Frame Shooter Game">
     <script src="https://aframe.io/releases/1.8.0/aframe.min.js"></script>
     <script src="movement.js"></script>
@@ -12,16 +12,42 @@
     <script src="enemy.js"></script>
     <script src="game.js"></script>
     <script src="plasma-shader.js"></script>
+    <link rel="stylesheet" href="styles.css">
     
   </head>
   <body>
     
+    <!-- Title Screen Overlay -->
+    <div id="title-screen">
+      <h1>Goblin Raid</h1>
+      <div class="rules">
+        <h2>Game Rules</h2>
+        <ul>
+          <li>Use WASD keys to move</li>
+          <li>Mouse to look around</li>
+          <li>Left click to shoot</li>
+          <li>Defeat enemies to score points</li>
+          <li>Avoid enemy attacks to survive</li>
+          <li>Collect treasure for bonus points</li>
+        </ul>
+      </div>
+      <button id="start-button">START GAME</button>
+    </div>
+
     <a-scene>
 
       <a-assets>
         <canvas id="plasma-canvas-tex" width="256" height="256" style="display:none"></canvas>
+        <a-asset-item id="tree-glb" src="tree.glb"></a-asset-item>
+        <a-asset-item id="grass-glb" src="grass.glb"></a-asset-item>
+        <a-asset-item id="bush-glb" src="bush.glb"></a-asset-item>
+        <a-asset-item id="treasure-glb" src="treasure_chest.glb"></a-asset-item>
+        <a-asset-item id="monster" src="monster.glb"></a-asset-item>
+        <img id="floor-texture" src="floor.jpg">
       </a-assets>
 
+      <!-- Sky -->
+      <a-sky color="#87CEEB"></a-sky>
 
       
 
@@ -31,11 +57,48 @@
         rotation="-90 0 0" 
         width="100" 
         height="100" 
-        color="#222" 
-        material="opacity: 0.9; roughness: 1"
+        src="#floor-texture"
+        material="opacity: 0.9; roughness: 1; repeat: 20 20"
       ></a-plane>
 
-      
+      <!-- Trees -->
+      <a-gltf-model src="#tree-glb" position="-8 0 -8" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="8 0 -8" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="-8 0 8" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="8 0 8" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="0 0 -12" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="0 0 12" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="-12 0 0" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="12 0 0" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="-6 0 -6" scale="0.5 0.5 0.5"></a-gltf-model>
+      <a-gltf-model src="#tree-glb" position="6 0 6" scale="0.5 0.5 0.5"></a-gltf-model>
+
+      <!-- Grass -->
+      <a-gltf-model src="#grass-glb" position="-5 0 -5" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="5 0 -5" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="-5 0 5" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="5 0 5" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="0 0 -8" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="0 0 8" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="-8 0 0" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="8 0 0" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="-3 0 -3" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#grass-glb" position="3 0 3" scale="1 1 1"></a-gltf-model>
+
+      <!-- Bushes -->
+      <a-gltf-model src="#bush-glb" position="-4 0 -4" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="4 0 -4" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="-4 0 4" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="4 0 4" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="0 0 -6" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="0 0 6" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="-6 0 0" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="6 0 0" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="-2 0 -2" scale="1 1 1"></a-gltf-model>
+      <a-gltf-model src="#bush-glb" position="2 0 2" scale="1 1 1"></a-gltf-model>
+
+      <!-- treasure -->
+      <a-gltf-model src="#treasure-glb" position="0.16 0 -2" rotation="0 -90 0" scale="1 1 1"></a-gltf-model>
 
       <!-- Camera rig with controllers as children -->
       <a-entity id="camera-rig" player-jump player-health>
